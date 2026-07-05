@@ -127,43 +127,39 @@ export default async function ReviewPage({
     .eq("submission_id", submissionId)
     .maybeSingle();
 
-  if (!aiResult || aiResult.status !== "completed") {
-    return (
-      <div className="mx-auto flex max-w-2xl flex-col gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Review &middot; {submission.profiles?.full_name}</CardTitle>
-            <CardDescription>
-              {aiResult?.status === "failed"
-                ? "AI grading failed for this submission. Try running “Grade all pending” again."
-                : "This submission has not been graded yet."}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        {filesCard}
-      </div>
+  const hasCompletedAiResult = aiResult?.status === "completed";
+
+  let criteriaRows = criteria.map((c) => ({
+    rubricCriterionId: c.id,
+    name: c.name,
+    maxPoints: c.max_points,
+    score: "0",
+    feedback: "",
+  }));
+  let overallFeedback = "";
+
+  if (hasCompletedAiResult) {
+    const { data: aiScores } = await supabase
+      .from("ai_criterion_scores")
+      .select("rubric_criterion_id, score, feedback")
+      .eq("ai_grading_result_id", aiResult.id);
+
+    const aiScoresByCriterion = new Map(
+      aiScores?.map((s) => [s.rubric_criterion_id, s]) ?? []
     );
+
+    criteriaRows = criteria.map((c) => {
+      const s = aiScoresByCriterion.get(c.id);
+      return {
+        rubricCriterionId: c.id,
+        name: c.name,
+        maxPoints: c.max_points,
+        score: String(s?.score ?? 0),
+        feedback: s?.feedback ?? "",
+      };
+    });
+    overallFeedback = aiResult.overall_feedback ?? "";
   }
-
-  const { data: aiScores } = await supabase
-    .from("ai_criterion_scores")
-    .select("rubric_criterion_id, score, feedback")
-    .eq("ai_grading_result_id", aiResult.id);
-
-  const aiScoresByCriterion = new Map(
-    aiScores?.map((s) => [s.rubric_criterion_id, s]) ?? []
-  );
-
-  const criteriaRows = criteria.map((c) => {
-    const s = aiScoresByCriterion.get(c.id);
-    return {
-      rubricCriterionId: c.id,
-      name: c.name,
-      maxPoints: c.max_points,
-      score: String(s?.score ?? 0),
-      feedback: s?.feedback ?? "",
-    };
-  });
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -171,7 +167,7 @@ export default async function ReviewPage({
         <h1 className="text-2xl font-semibold">
           Review &middot; {submission.profiles?.full_name}
         </h1>
-        {aiResult.needs_attention && (
+        {hasCompletedAiResult && aiResult.needs_attention && (
           <Badge variant="destructive">
             AI returned a score above a criterion&apos;s max &mdash; check before publishing
           </Badge>
@@ -180,10 +176,15 @@ export default async function ReviewPage({
       {filesCard}
       <Card>
         <CardHeader>
-          <CardTitle>AI-suggested grade</CardTitle>
+          <CardTitle>
+            {hasCompletedAiResult ? "AI-suggested grade" : "Enter grade manually"}
+          </CardTitle>
           <CardDescription>
-            Edit anything below before publishing &mdash; nothing here is visible to
-            the student until you publish.
+            {hasCompletedAiResult
+              ? "Edit anything below before publishing — nothing here is visible to the student until you publish."
+              : aiResult?.status === "failed"
+                ? "AI grading failed for this submission — enter scores manually below, or try “Grade all pending” again first."
+                : "This submission hasn't been through AI grading yet — enter scores below to publish directly, or run “Grade all pending” first for AI-suggested scores."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -191,8 +192,8 @@ export default async function ReviewPage({
             subjectId={subjectId}
             assignmentId={assignmentId}
             submissionId={submissionId}
-            aiGradingResultId={aiResult.id}
-            overallFeedback={aiResult.overall_feedback ?? ""}
+            aiGradingResultId={hasCompletedAiResult ? aiResult.id : null}
+            overallFeedback={overallFeedback}
             criteria={criteriaRows}
           />
         </CardContent>

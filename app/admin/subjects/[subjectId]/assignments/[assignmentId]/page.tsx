@@ -224,15 +224,14 @@ export default async function AssignmentDetailPage({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {submission.status !== "draft" &&
-                        submission.status !== "submitted" && (
-                          <Link
-                            href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/submissions/${submission.id}/review`}
-                            className="text-sm underline underline-offset-4"
-                          >
-                            Review
-                          </Link>
-                        )}
+                      {submission.status !== "draft" && (
+                        <Link
+                          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/submissions/${submission.id}/review`}
+                          className="text-sm underline underline-offset-4"
+                        >
+                          {submission.status === "submitted" ? "Grade" : "Review"}
+                        </Link>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
