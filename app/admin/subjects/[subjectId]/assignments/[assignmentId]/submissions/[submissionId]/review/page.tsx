@@ -8,6 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DownloadFileLink } from "@/components/download-file-link";
+import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 import { ReviewForm } from "./review-form";
 
 export default async function ReviewPage({
@@ -24,16 +26,35 @@ export default async function ReviewPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("id, status, profiles(full_name)")
+    .select("id, status, profiles(full_name), submission_files(id, original_filename, scan_status)")
     .eq("id", submissionId)
     .eq("assignment_id", assignmentId)
     .single<{
       id: string;
       status: string;
       profiles: { full_name: string } | null;
+      submission_files: { id: string; original_filename: string; scan_status: string }[];
     }>();
 
   if (!submission) notFound();
+
+  const filesCard = submission.submission_files.length > 0 && (
+    <Card>
+      <CardHeader>
+        <CardTitle>Submitted files</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {submission.submission_files.map((file) => (
+          <div key={file.id} className="flex items-center gap-2 text-sm">
+            <DownloadFileLink fileId={file.id} filename={file.original_filename} />
+            <Badge variant={scanStatusBadgeVariant(file.scan_status)}>
+              {scanStatusLabel(file.scan_status)}
+            </Badge>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 
   const { data: criteria } = await supabase
     .from("rubric_criteria")
@@ -69,6 +90,7 @@ export default async function ReviewPage({
             Published {new Date(publishedGrade.published_at).toLocaleString()}
           </Badge>
         </div>
+        {filesCard}
         <Card>
           <CardHeader>
             <CardTitle>Published grade &mdash; {publishedGrade.total_score} points</CardTitle>
@@ -107,7 +129,7 @@ export default async function ReviewPage({
 
   if (!aiResult || aiResult.status !== "completed") {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Review &middot; {submission.profiles?.full_name}</CardTitle>
@@ -118,6 +140,7 @@ export default async function ReviewPage({
             </CardDescription>
           </CardHeader>
         </Card>
+        {filesCard}
       </div>
     );
   }
@@ -154,6 +177,7 @@ export default async function ReviewPage({
           </Badge>
         )}
       </div>
+      {filesCard}
       <Card>
         <CardHeader>
           <CardTitle>AI-suggested grade</CardTitle>

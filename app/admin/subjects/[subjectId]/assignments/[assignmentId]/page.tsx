@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { GradeAllButton, ImportBatchButton } from "./grading-controls";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
+import { DownloadFileLink } from "@/components/download-file-link";
 
 // Grading a batch downloads + extracts every submission's files synchronously
 // before handing off to the Anthropic Batches API. 60s is the max duration
@@ -211,7 +212,10 @@ export default async function AssignmentDetailPage({
                             key={file.id}
                             className="flex items-center gap-2 text-sm"
                           >
-                            <span>{file.original_filename}</span>
+                            <DownloadFileLink
+                              fileId={file.id}
+                              filename={file.original_filename}
+                            />
                             <Badge variant={scanStatusBadgeVariant(file.scan_status)}>
                               {scanStatusLabel(file.scan_status)}
                             </Badge>

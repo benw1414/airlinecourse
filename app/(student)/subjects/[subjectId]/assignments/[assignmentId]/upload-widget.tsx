@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { isAllowedFile, MAX_FILE_SIZE_BYTES } from "@/lib/uploads/constraints";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
+import { DownloadFileLink } from "@/components/download-file-link";
 
 type SubmissionFile = {
   id: string;
@@ -123,7 +124,7 @@ export function UploadWidget({
               key={file.id}
               className="flex items-center justify-between gap-2 rounded-lg border p-2 text-sm"
             >
-              <span>{file.original_filename}</span>
+              <DownloadFileLink fileId={file.id} filename={file.original_filename} />
               <div className="flex items-center gap-2">
                 <Badge variant={scanStatusBadgeVariant(file.scan_status)}>
                   {scanStatusLabel(file.scan_status)}
