@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { isAllowedFile, MAX_FILE_SIZE_BYTES } from "@/lib/uploads/constraints";
+import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 
 type SubmissionFile = {
   id: string;
@@ -19,12 +20,6 @@ type SubmissionFile = {
 };
 
 const initialState: ActionState = { error: null };
-
-function scanBadgeVariant(status: string) {
-  if (status === "clean") return "default" as const;
-  if (status === "infected") return "destructive" as const;
-  return "outline" as const;
-}
 
 export function UploadWidget({
   studentId,
@@ -130,8 +125,8 @@ export function UploadWidget({
             >
               <span>{file.original_filename}</span>
               <div className="flex items-center gap-2">
-                <Badge variant={scanBadgeVariant(file.scan_status)}>
-                  {file.scan_status}
+                <Badge variant={scanStatusBadgeVariant(file.scan_status)}>
+                  {scanStatusLabel(file.scan_status)}
                 </Badge>
                 {status === "draft" && (
                   <button
