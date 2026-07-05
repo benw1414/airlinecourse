@@ -47,12 +47,20 @@ export default async function SemestersPage() {
                     {semester.subjects?.[0]?.count === 1 ? "" : "s"}
                   </CardDescription>
                 </div>
-                <Link
-                  href={`/admin/semesters/${semester.id}/subjects/new`}
-                  className="text-sm underline underline-offset-4"
-                >
-                  Add subject
-                </Link>
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={`/admin/semesters/${semester.id}/edit`}
+                    className="text-sm underline underline-offset-4"
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    href={`/admin/semesters/${semester.id}/subjects/new`}
+                    className="text-sm underline underline-offset-4"
+                  >
+                    Add subject
+                  </Link>
+                </div>
               </CardHeader>
             </Card>
           ))

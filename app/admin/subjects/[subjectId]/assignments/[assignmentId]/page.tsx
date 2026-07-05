@@ -84,15 +84,23 @@ export default async function AssignmentDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          Week {assignment.week_number} &middot; {assignment.title}
-        </h1>
-        <p className="text-muted-foreground">
-          {assignment.max_points} points
-          {assignment.due_at &&
-            ` · Due ${new Date(assignment.due_at).toLocaleString()}`}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            Week {assignment.week_number} &middot; {assignment.title}
+          </h1>
+          <p className="text-muted-foreground">
+            {assignment.max_points} points
+            {assignment.due_at &&
+              ` · Due ${new Date(assignment.due_at).toLocaleString()}`}
+          </p>
+        </div>
+        <Link
+          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/edit`}
+          className="text-sm underline underline-offset-4"
+        >
+          Edit
+        </Link>
       </div>
 
       {assignment.instructions && (

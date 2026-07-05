@@ -47,3 +47,40 @@ export async function createSemester(
   revalidatePath("/admin/semesters");
   return { error: null };
 }
+
+const updateSemesterSchema = semesterSchema.and(
+  z.object({ semesterId: z.string().uuid() })
+);
+
+export async function updateSemester(
+  _prevState: SemesterActionState,
+  formData: FormData
+): Promise<SemesterActionState> {
+  await requireLecturer();
+
+  const parsed = updateSemesterSchema.safeParse({
+    semesterId: formData.get("semesterId"),
+    name: formData.get("name"),
+    startsOn: formData.get("startsOn"),
+    endsOn: formData.get("endsOn"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("semesters")
+    .update({
+      name: parsed.data.name,
+      starts_on: parsed.data.startsOn,
+      ends_on: parsed.data.endsOn,
+    })
+    .eq("id", parsed.data.semesterId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/semesters");
+  return { error: null };
+}

@@ -94,3 +94,70 @@ export async function createAssignment(
   revalidatePath(`/admin/subjects/${parsed.data.subjectId}`);
   redirect(`/admin/subjects/${parsed.data.subjectId}/assignments/${assignment.id}`);
 }
+
+const updateAssignmentSchema = assignmentSchema.and(
+  z.object({ assignmentId: z.string().uuid() })
+);
+
+export async function updateAssignment(
+  _prevState: AssignmentActionState,
+  formData: FormData
+): Promise<AssignmentActionState> {
+  await requireLecturer();
+
+  const parsed = updateAssignmentSchema.safeParse({
+    subjectId: formData.get("subjectId"),
+    assignmentId: formData.get("assignmentId"),
+    weekNumber: formData.get("weekNumber"),
+    title: formData.get("title"),
+    instructions: formData.get("instructions") || undefined,
+    dueAt: formData.get("dueAt") || undefined,
+    criteria: formData.get("criteria"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+
+  const { error: assignmentError } = await supabase
+    .from("assignments")
+    .update({
+      week_number: parsed.data.weekNumber,
+      title: parsed.data.title,
+      instructions: parsed.data.instructions ?? null,
+      due_at: parsed.data.dueAt ? new Date(parsed.data.dueAt).toISOString() : null,
+    })
+    .eq("id", parsed.data.assignmentId);
+
+  if (assignmentError) return { error: assignmentError.message };
+
+  // Replace the criteria set wholesale, same as on create. Note: removing a
+  // criterion here cascades to any ai_criterion_scores / published_criterion_scores
+  // already tied to it — only relevant once grading has started on this assignment.
+  const { error: deleteError } = await supabase
+    .from("rubric_criteria")
+    .delete()
+    .eq("assignment_id", parsed.data.assignmentId);
+
+  if (deleteError) return { error: deleteError.message };
+
+  const { error: criteriaError } = await supabase.from("rubric_criteria").insert(
+    parsed.data.criteria.map((c, index) => ({
+      assignment_id: parsed.data.assignmentId,
+      name: c.name,
+      description: c.description ?? null,
+      max_points: c.maxPoints,
+      position: index,
+    }))
+  );
+
+  if (criteriaError) return { error: criteriaError.message };
+
+  revalidatePath(`/admin/subjects/${parsed.data.subjectId}`);
+  revalidatePath(
+    `/admin/subjects/${parsed.data.subjectId}/assignments/${parsed.data.assignmentId}`
+  );
+  return { error: null };
+}

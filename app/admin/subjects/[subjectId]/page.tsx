@@ -33,11 +33,19 @@ export default async function SubjectPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {subject.code} &middot; {subject.title}
-        </h1>
-        <p className="text-muted-foreground">{subject.semesters?.name}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {subject.code} &middot; {subject.title}
+          </h1>
+          <p className="text-muted-foreground">{subject.semesters?.name}</p>
+        </div>
+        <Link
+          href={`/admin/subjects/${subject.id}/edit`}
+          className="text-sm underline underline-offset-4"
+        >
+          Edit
+        </Link>
       </div>
 
       {subject.description && (
