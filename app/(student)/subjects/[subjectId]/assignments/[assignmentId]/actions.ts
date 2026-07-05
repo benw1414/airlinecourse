@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   isAllowedMimeType,
   MAX_FILE_SIZE_BYTES,
+  mimeTypeFromExtension,
 } from "@/lib/uploads/constraints";
 import { scanFileForViruses } from "@/lib/uploads/virus-scan";
 
@@ -44,7 +45,10 @@ const recordFileSchema = z.object({
   submissionId: uuid,
   storagePath: z.string().trim().min(1),
   originalFilename: z.string().trim().min(1),
-  mimeType: z.string().trim().min(1),
+  // Browsers frequently report an empty file.type for perfectly valid files
+  // (especially on mobile) — allow it through; effectiveMimeType below
+  // falls back to magic-byte sniffing and the file extension.
+  mimeType: z.string().trim(),
   sizeBytes: z.coerce.number().positive(),
 });
 
@@ -96,7 +100,11 @@ export async function recordUploadedFile(
 
   const bytes = await downloaded.arrayBuffer();
   const sniffed = await fileTypeFromBuffer(new Uint8Array(bytes));
-  const effectiveMimeType = sniffed?.mime ?? mimeType;
+  // Prefer byte-level sniffing, then the extension (reliable and canonical),
+  // and only fall back to the browser-reported type as a last resort — it's
+  // frequently empty or wrong on mobile browsers and files from chat apps.
+  const effectiveMimeType =
+    sniffed?.mime ?? mimeTypeFromExtension(originalFilename) ?? mimeType;
 
   if (!isAllowedMimeType(effectiveMimeType)) {
     await removeStorageObject(storagePath);

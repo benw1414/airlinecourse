@@ -1,5 +1,6 @@
 import AdmZip from "adm-zip";
 import { OfficeParser } from "officeparser";
+import { mimeTypeFromExtension } from "@/lib/uploads/constraints";
 
 type ImageMimeType = "image/jpeg" | "image/png" | "image/gif" | "image/webp";
 
@@ -30,26 +31,6 @@ const OFFICE_MIME_TYPES = new Set([
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ]);
-
-const EXTENSION_MIME_TYPES: Record<string, string> = {
-  pdf: "application/pdf",
-  doc: "application/msword",
-  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ppt: "application/vnd.ms-powerpoint",
-  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-  xls: "application/vnd.ms-excel",
-  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  webp: "image/webp",
-};
-
-function mimeTypeFromFilename(filename: string): string | null {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  return (ext && EXTENSION_MIME_TYPES[ext]) ?? null;
-}
 
 async function extractOne(file: InputFile): Promise<ContentBlock[] | null> {
   const { filename, mimeType, bytes } = file;
@@ -94,7 +75,7 @@ async function extractOne(file: InputFile): Promise<ContentBlock[] | null> {
       if (entry.isDirectory) continue;
       if (entry.entryName.toLowerCase().endsWith(".zip")) continue; // no recursive zips
 
-      const entryMimeType = mimeTypeFromFilename(entry.entryName);
+      const entryMimeType = mimeTypeFromExtension(entry.entryName);
       if (!entryMimeType) continue;
 
       const nested = await extractOne({

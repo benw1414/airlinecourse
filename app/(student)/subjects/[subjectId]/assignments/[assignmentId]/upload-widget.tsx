@@ -10,10 +10,7 @@ import {
 } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  ALLOWED_MIME_TYPES,
-  MAX_FILE_SIZE_BYTES,
-} from "@/lib/uploads/constraints";
+import { isAllowedFile, MAX_FILE_SIZE_BYTES } from "@/lib/uploads/constraints";
 
 type SubmissionFile = {
   id: string;
@@ -59,8 +56,10 @@ export function UploadWidget({
       setUploadError("File exceeds the 25MB per-file limit");
       return;
     }
-    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.type)) {
-      setUploadError(`File type "${file.type || "unknown"}" is not allowed`);
+    if (!isAllowedFile(file.name, file.type)) {
+      setUploadError(
+        "This file type isn't supported. Allowed: PDF, Word, PowerPoint, Excel, images, or zip."
+      );
       return;
     }
 
