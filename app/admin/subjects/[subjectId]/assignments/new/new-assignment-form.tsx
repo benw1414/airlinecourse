@@ -104,6 +104,19 @@ export function NewAssignmentForm({ subjectId }: { subjectId: string }) {
         />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${formId}-submissionMode`}>Submission type</Label>
+        <select
+          id={`${formId}-submissionMode`}
+          name="submissionMode"
+          defaultValue="individual"
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+        >
+          <option value="individual">Individual</option>
+          <option value="group">Group (by student group name)</option>
+        </select>
+      </div>
+
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <Label>Rubric criteria</Label>

@@ -30,9 +30,28 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form action={formAction} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="firstName">First name</Label>
+                <Input id="firstName" name="firstName" required autoComplete="given-name" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input id="lastName" name="lastName" required autoComplete="family-name" />
+              </div>
+            </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" name="fullName" required autoComplete="name" />
+              <Label htmlFor="studentNumber">Student ID</Label>
+              <Input id="studentNumber" name="studentNumber" required />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="groupName">Group name</Label>
+              <Input
+                id="groupName"
+                name="groupName"
+                placeholder="e.g. Group 4"
+                required
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>

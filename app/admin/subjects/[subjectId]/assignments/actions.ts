@@ -22,6 +22,7 @@ const assignmentSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   instructions: z.string().trim().optional(),
   dueAt: z.string().optional(),
+  submissionMode: z.enum(["individual", "group"]),
   criteria: z
     .string()
     .transform((raw, ctx) => {
@@ -49,6 +50,7 @@ export async function createAssignment(
     title: formData.get("title"),
     instructions: formData.get("instructions") || undefined,
     dueAt: formData.get("dueAt") || undefined,
+    submissionMode: formData.get("submissionMode") || "individual",
     criteria: formData.get("criteria"),
   });
 
@@ -68,6 +70,7 @@ export async function createAssignment(
       due_at: parsed.data.dueAt
         ? new Date(parsed.data.dueAt).toISOString()
         : null,
+      submission_mode: parsed.data.submissionMode,
     })
     .select("id")
     .single();
@@ -112,6 +115,7 @@ export async function updateAssignment(
     title: formData.get("title"),
     instructions: formData.get("instructions") || undefined,
     dueAt: formData.get("dueAt") || undefined,
+    submissionMode: formData.get("submissionMode") || "individual",
     criteria: formData.get("criteria"),
   });
 
@@ -128,6 +132,7 @@ export async function updateAssignment(
       title: parsed.data.title,
       instructions: parsed.data.instructions ?? null,
       due_at: parsed.data.dueAt ? new Date(parsed.data.dueAt).toISOString() : null,
+      submission_mode: parsed.data.submissionMode,
     })
     .eq("id", parsed.data.assignmentId);
 

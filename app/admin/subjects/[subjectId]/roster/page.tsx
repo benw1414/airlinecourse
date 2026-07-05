@@ -29,7 +29,7 @@ export default async function RosterPage({
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select<string, EnrollmentWithProfile>(
-      "id, enrolled_at, profiles(full_name)"
+      "id, enrolled_at, profiles(full_name, student_number, group_name)"
     )
     .eq("subject_id", subjectId)
     .order("enrolled_at");
@@ -47,6 +47,8 @@ export default async function RosterPage({
         <TableHeader>
           <TableRow>
             <TableHead>Student</TableHead>
+            <TableHead>Student ID</TableHead>
+            <TableHead>Group</TableHead>
             <TableHead>Enrolled on</TableHead>
           </TableRow>
         </TableHeader>
@@ -55,6 +57,8 @@ export default async function RosterPage({
             enrollments.map((enrollment) => (
               <TableRow key={enrollment.id}>
                 <TableCell>{enrollment.profiles?.full_name}</TableCell>
+                <TableCell>{enrollment.profiles?.student_number ?? "—"}</TableCell>
+                <TableCell>{enrollment.profiles?.group_name ?? "—"}</TableCell>
                 <TableCell>
                   {new Date(enrollment.enrolled_at).toLocaleDateString()}
                 </TableCell>
@@ -62,7 +66,7 @@ export default async function RosterPage({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={2} className="text-muted-foreground">
+              <TableCell colSpan={4} className="text-muted-foreground">
                 No students enrolled yet.
               </TableCell>
             </TableRow>

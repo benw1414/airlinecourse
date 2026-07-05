@@ -39,7 +39,7 @@ export default async function StudentAssignmentPage({
 
   const { data: assignment } = await supabase
     .from("assignments")
-    .select("id, week_number, title, instructions, due_at, max_points")
+    .select("id, week_number, title, instructions, due_at, max_points, submission_mode")
     .eq("id", assignmentId)
     .eq("subject_id", subjectId)
     .single();
@@ -94,6 +94,19 @@ export default async function StudentAssignmentPage({
           {assignment.due_at &&
             ` · Due ${new Date(assignment.due_at).toLocaleString()}`}
         </p>
+        {assignment.submission_mode === "group" && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            This is a <strong>group submission</strong>.{" "}
+            {profile.group_name ? (
+              <>
+                When you submit, it will also submit for everyone else in{" "}
+                <strong>{profile.group_name}</strong> enrolled in this subject.
+              </>
+            ) : (
+              "You don't have a group name set on your profile, so this will only submit for you."
+            )}
+          </p>
+        )}
       </div>
 
       {assignment.instructions && (

@@ -25,7 +25,7 @@ export default async function EditAssignmentPage({
 
   const { data: assignment } = await supabase
     .from("assignments")
-    .select("id, week_number, title, instructions, due_at")
+    .select("id, week_number, title, instructions, due_at, submission_mode")
     .eq("id", assignmentId)
     .eq("subject_id", subjectId)
     .single();
@@ -55,6 +55,7 @@ export default async function EditAssignmentPage({
             title={assignment.title}
             instructions={assignment.instructions}
             dueAt={toDatetimeLocal(assignment.due_at)}
+            submissionMode={assignment.submission_mode}
             criteria={(criteria ?? []).map((c) => ({
               id: c.id,
               name: c.name,

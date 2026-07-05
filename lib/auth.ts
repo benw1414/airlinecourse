@@ -5,6 +5,10 @@ export type Profile = {
   id: string;
   full_name: string;
   role: "lecturer" | "student";
+  first_name: string | null;
+  last_name: string | null;
+  student_number: string | null;
+  group_name: string | null;
 };
 
 export async function getCurrentProfile(): Promise<Profile | null> {
@@ -17,7 +21,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, full_name, role")
+    .select("id, full_name, role, first_name, last_name, student_number, group_name")
     .eq("id", user.id)
     .single();
 

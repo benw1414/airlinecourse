@@ -37,7 +37,7 @@ type SubmissionRow = {
   id: string;
   status: string;
   submitted_at: string | null;
-  profiles: { full_name: string } | null;
+  profiles: { full_name: string; group_name: string | null } | null;
   submission_files: {
     id: string;
     original_filename: string;
@@ -55,7 +55,7 @@ export default async function AssignmentDetailPage({
 
   const { data: assignment } = await supabase
     .from("assignments")
-    .select("id, week_number, title, instructions, due_at, max_points")
+    .select("id, week_number, title, instructions, due_at, max_points, submission_mode")
     .eq("id", assignmentId)
     .eq("subject_id", subjectId)
     .single();
@@ -71,7 +71,7 @@ export default async function AssignmentDetailPage({
   const { data: submissions } = await supabase
     .from("submissions")
     .select<string, SubmissionRow>(
-      "id, status, submitted_at, profiles(full_name), submission_files(id, original_filename, scan_status)"
+      "id, status, submitted_at, profiles(full_name, group_name), submission_files(id, original_filename, scan_status)"
     )
     .eq("assignment_id", assignmentId)
     .order("submitted_at");
@@ -86,9 +86,14 @@ export default async function AssignmentDetailPage({
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">
-            Week {assignment.week_number} &middot; {assignment.title}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">
+              Week {assignment.week_number} &middot; {assignment.title}
+            </h1>
+            {assignment.submission_mode === "group" && (
+              <Badge variant="secondary">Group submission</Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             {assignment.max_points} points
             {assignment.due_at &&
@@ -177,6 +182,9 @@ export default async function AssignmentDetailPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
+                {assignment.submission_mode === "group" && (
+                  <TableHead>Group</TableHead>
+                )}
                 <TableHead>Status</TableHead>
                 <TableHead>Files</TableHead>
                 <TableHead></TableHead>
@@ -187,6 +195,11 @@ export default async function AssignmentDetailPage({
                 submissions.map((submission) => (
                   <TableRow key={submission.id}>
                     <TableCell>{submission.profiles?.full_name}</TableCell>
+                    {assignment.submission_mode === "group" && (
+                      <TableCell className="text-muted-foreground">
+                        {submission.profiles?.group_name ?? "—"}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge variant="secondary">{submission.status}</Badge>
                     </TableCell>
@@ -228,7 +241,10 @@ export default async function AssignmentDetailPage({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-muted-foreground">
+                  <TableCell
+                    colSpan={assignment.submission_mode === "group" ? 5 : 4}
+                    className="text-muted-foreground"
+                  >
                     No submissions yet.
                   </TableCell>
                 </TableRow>

@@ -33,5 +33,9 @@ export type EnrollmentWithSubject = {
 export type EnrollmentWithProfile = {
   id: string;
   enrolled_at: string;
-  profiles: { full_name: string } | null;
+  profiles: {
+    full_name: string;
+    student_number: string | null;
+    group_name: string | null;
+  } | null;
 };

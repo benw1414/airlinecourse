@@ -11,6 +11,7 @@ import {
   mimeTypeFromExtension,
 } from "@/lib/uploads/constraints";
 import { scanFileForViruses } from "@/lib/uploads/virus-scan";
+import { propagateGroupSubmission } from "@/lib/group-submissions";
 
 export type ActionState = { error: string | null };
 
@@ -192,7 +193,7 @@ export async function markSubmitted(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireProfile();
+  const profile = await requireProfile();
 
   const parsed = markSubmittedSchema.safeParse({
     submissionId: formData.get("submissionId"),
@@ -209,6 +210,20 @@ export async function markSubmitted(
     .eq("id", parsed.data.submissionId);
 
   if (error) return { error: error.message };
+
+  const { data: assignment } = await supabase
+    .from("assignments")
+    .select("submission_mode")
+    .eq("id", parsed.data.assignmentId)
+    .single();
+
+  if (assignment?.submission_mode === "group") {
+    await propagateGroupSubmission({
+      subjectId: parsed.data.subjectId,
+      assignmentId: parsed.data.assignmentId,
+      uploaderId: profile.id,
+    });
+  }
 
   revalidatePath(
     `/subjects/${parsed.data.subjectId}/assignments/${parsed.data.assignmentId}`

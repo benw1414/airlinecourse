@@ -5,7 +5,10 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const signUpSchema = z.object({
-  fullName: z.string().trim().min(1, "Full name is required"),
+  firstName: z.string().trim().min(1, "First name is required"),
+  lastName: z.string().trim().min(1, "Last name is required"),
+  studentNumber: z.string().trim().min(1, "Student ID is required"),
+  groupName: z.string().trim().min(1, "Group name is required"),
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
@@ -22,7 +25,10 @@ export async function signUp(
   formData: FormData
 ): Promise<AuthActionState> {
   const parsed = signUpSchema.safeParse({
-    fullName: formData.get("fullName"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    studentNumber: formData.get("studentNumber"),
+    groupName: formData.get("groupName"),
     email: formData.get("email"),
     password: formData.get("password"),
   });
@@ -35,7 +41,15 @@ export async function signUp(
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { full_name: parsed.data.fullName } },
+    options: {
+      data: {
+        full_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+        student_number: parsed.data.studentNumber,
+        group_name: parsed.data.groupName,
+      },
+    },
   });
 
   if (error) return { error: error.message };

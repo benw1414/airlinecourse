@@ -22,6 +22,7 @@ export function EditAssignmentForm({
   title,
   instructions,
   dueAt,
+  submissionMode,
   criteria: initialCriteria,
 }: {
   subjectId: string;
@@ -30,6 +31,7 @@ export function EditAssignmentForm({
   title: string;
   instructions: string | null;
   dueAt: string | null;
+  submissionMode: string;
   criteria: { id: string; name: string; description: string | null; maxPoints: number }[];
 }) {
   const router = useRouter();
@@ -115,6 +117,19 @@ export function EditAssignmentForm({
           rows={4}
           defaultValue={instructions ?? ""}
         />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${formId}-submissionMode`}>Submission type</Label>
+        <select
+          id={`${formId}-submissionMode`}
+          name="submissionMode"
+          defaultValue={submissionMode}
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+        >
+          <option value="individual">Individual</option>
+          <option value="group">Group (by student group name)</option>
+        </select>
       </div>
 
       <div className="flex flex-col gap-3">
