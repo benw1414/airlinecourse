@@ -68,9 +68,16 @@ export function UploadWidget({
       const supabase = createClient();
       const path = `${subjectId}/${assignmentId}/${studentId}/${submissionId}/${file.name}`;
 
+      // Upload an ArrayBuffer rather than the raw File — Safari's fetch()
+      // throws "Load failed" streaming a File/Blob body directly in some
+      // versions; a plain ArrayBuffer sidesteps that code path entirely.
+      const bytes = await file.arrayBuffer();
       const { error: uploadErr } = await supabase.storage
         .from("submissions")
-        .upload(path, file, { upsert: true });
+        .upload(path, bytes, {
+          upsert: true,
+          contentType: file.type || "application/octet-stream",
+        });
 
       if (uploadErr) {
         setUploadError(uploadErr.message);
@@ -88,6 +95,8 @@ export function UploadWidget({
 
       const result = await recordUploadedFile(initialState, formData);
       if (result.error) setUploadError(result.error);
+    } catch {
+      setUploadError("Upload failed — check your connection and try again.");
     } finally {
       setUploading(false);
     }
