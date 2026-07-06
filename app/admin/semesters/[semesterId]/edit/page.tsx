@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EditSemesterForm } from "./edit-semester-form";
+import { BackLink } from "@/components/back-link";
 
 export default async function EditSemesterPage({
   params,
@@ -25,7 +26,8 @@ export default async function EditSemesterPage({
   if (!semester) notFound();
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto flex max-w-lg flex-col gap-4">
+      <BackLink href="/admin/semesters" label="Semesters" />
       <Card>
         <CardHeader>
           <CardTitle>Edit semester</CardTitle>

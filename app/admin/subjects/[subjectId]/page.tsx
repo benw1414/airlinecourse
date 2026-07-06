@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BackLink } from "@/components/back-link";
 
 export default async function SubjectPage({
   params,
@@ -33,6 +34,7 @@ export default async function SubjectPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href="/admin" label="Subjects" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">

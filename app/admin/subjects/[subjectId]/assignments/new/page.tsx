@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { NewAssignmentForm } from "./new-assignment-form";
+import { BackLink } from "@/components/back-link";
 
 export default async function NewAssignmentPage({
   params,
@@ -25,7 +26,8 @@ export default async function NewAssignmentPage({
   if (!subject) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+      <BackLink href={`/admin/subjects/${subjectId}/assignments`} label="Assignments" />
       <Card>
         <CardHeader>
           <CardTitle>

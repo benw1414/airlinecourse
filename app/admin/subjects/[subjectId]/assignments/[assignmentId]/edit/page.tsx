@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EditAssignmentForm } from "./edit-assignment-form";
+import { BackLink } from "@/components/back-link";
 
 function toDatetimeLocal(value: string | null): string | null {
   if (!value) return null;
@@ -39,7 +40,11 @@ export default async function EditAssignmentPage({
     .order("position");
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+      <BackLink
+        href={`/admin/subjects/${subjectId}/assignments/${assignmentId}`}
+        label={`Week ${assignment.week_number}`}
+      />
       <Card>
         <CardHeader>
           <CardTitle>Edit assignment</CardTitle>

@@ -12,6 +12,7 @@ import { DownloadFileLink } from "@/components/download-file-link";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 import { ReviewForm } from "./review-form";
 import { formatStudentName } from "@/lib/format-name";
+import { BackLink } from "@/components/back-link";
 
 export default async function ReviewPage({
   params,
@@ -88,6 +89,10 @@ export default async function ReviewPage({
 
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-6">
+        <BackLink
+          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}`}
+          label="Back to submissions"
+        />
         <div>
           <h1 className="text-2xl font-semibold">
             Review &middot; {studentDisplayName}
@@ -169,6 +174,10 @@ export default async function ReviewPage({
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <BackLink
+        href={`/admin/subjects/${subjectId}/assignments/${assignmentId}`}
+        label="Back to submissions"
+      />
       <div>
         <h1 className="text-2xl font-semibold">
           Review &middot; {studentDisplayName}

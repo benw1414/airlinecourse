@@ -21,6 +21,7 @@ import { GradeAllButton, ImportBatchButton } from "./grading-controls";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 import { DownloadFileLink } from "@/components/download-file-link";
 import { formatStudentName } from "@/lib/format-name";
+import { BackLink } from "@/components/back-link";
 
 // Grading a batch downloads + extracts every submission's files synchronously
 // before handing off to the Anthropic Batches API. 60s is the max duration
@@ -87,6 +88,7 @@ export default async function AssignmentDetailPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href={`/admin/subjects/${subjectId}/assignments`} label="Assignments" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { NewSubjectForm } from "./new-subject-form";
+import { BackLink } from "@/components/back-link";
 
 export default async function NewSubjectPage({
   params,
@@ -25,7 +26,8 @@ export default async function NewSubjectPage({
   if (!semester) notFound();
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto flex max-w-lg flex-col gap-4">
+      <BackLink href="/admin/semesters" label="Semesters" />
       <Card>
         <CardHeader>
           <CardTitle>New subject in {semester.name}</CardTitle>

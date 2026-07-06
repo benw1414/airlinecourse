@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ensureSubmission } from "./actions";
 import { UploadWidget } from "./upload-widget";
+import { BackLink } from "@/components/back-link";
 
 type RubricCriterion = {
   id: string;
@@ -85,6 +86,7 @@ export default async function StudentAssignmentPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href={`/subjects/${subjectId}`} label="Back to subject" />
       <div>
         <h1 className="text-2xl font-semibold">
           Week {assignment.week_number} &middot; {assignment.title}

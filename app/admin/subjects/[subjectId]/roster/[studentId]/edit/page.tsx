@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EditStudentForm } from "./edit-student-form";
+import { BackLink } from "@/components/back-link";
 
 export default async function EditStudentPage({
   params,
@@ -25,7 +26,8 @@ export default async function EditStudentPage({
   if (!profile) notFound();
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto flex max-w-lg flex-col gap-4">
+      <BackLink href={`/admin/subjects/${subjectId}/roster`} label="Roster" />
       <Card>
         <CardHeader>
           <CardTitle>Edit student</CardTitle>

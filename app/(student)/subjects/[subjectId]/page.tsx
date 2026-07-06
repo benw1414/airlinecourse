@@ -11,6 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EnrollButton } from "../enroll-button";
+import { Badge } from "@/components/ui/badge";
+import { BackLink } from "@/components/back-link";
 
 export default async function StudentSubjectPage({
   params,
@@ -59,6 +61,7 @@ export default async function StudentSubjectPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href="/subjects" label="Browse Subjects" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">
@@ -98,9 +101,9 @@ export default async function StudentSubjectPage({
                           ` · Due ${new Date(assignment.due_at).toLocaleString()}`}
                       </CardDescription>
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <Badge variant="secondary">
                       {statusByAssignment.get(assignment.id) ?? "not started"}
-                    </span>
+                    </Badge>
                   </CardHeader>
                 </Card>
               </Link>

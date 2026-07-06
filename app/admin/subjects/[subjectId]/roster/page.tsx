@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { UnenrollButton } from "./unenroll-button";
 import { formatStudentName } from "@/lib/format-name";
+import { BackLink } from "@/components/back-link";
 
 export default async function RosterPage({
   params,
@@ -39,6 +40,7 @@ export default async function RosterPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink href={`/admin/subjects/${subjectId}`} label={subject.code} />
       <div>
         <h1 className="text-2xl font-semibold">
           Roster &middot; {subject.code}
