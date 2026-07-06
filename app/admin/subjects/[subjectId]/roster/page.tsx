@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UnenrollButton } from "./unenroll-button";
+import { formatStudentName } from "@/lib/format-name";
 
 export default async function RosterPage({
   params,
@@ -31,7 +32,7 @@ export default async function RosterPage({
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select<string, EnrollmentWithProfile>(
-      "id, student_id, enrolled_at, profiles(full_name, first_name, last_name, student_number, group_name)"
+      "id, student_id, enrolled_at, profiles(full_name, first_name, last_name, nickname, student_number, group_name)"
     )
     .eq("subject_id", subjectId)
     .order("enrolled_at");
@@ -59,7 +60,9 @@ export default async function RosterPage({
           {enrollments?.length ? (
             enrollments.map((enrollment) => (
               <TableRow key={enrollment.id}>
-                <TableCell>{enrollment.profiles?.full_name}</TableCell>
+                <TableCell>
+                  {formatStudentName(enrollment.profiles?.full_name, enrollment.profiles?.nickname)}
+                </TableCell>
                 <TableCell>{enrollment.profiles?.student_number ?? "—"}</TableCell>
                 <TableCell>{enrollment.profiles?.group_name ?? "—"}</TableCell>
                 <TableCell>
@@ -76,7 +79,10 @@ export default async function RosterPage({
                     <UnenrollButton
                       subjectId={subjectId}
                       studentId={enrollment.student_id}
-                      studentName={enrollment.profiles?.full_name ?? "this student"}
+                      studentName={
+                        formatStudentName(enrollment.profiles?.full_name, enrollment.profiles?.nickname) ||
+                        "this student"
+                      }
                     />
                   </div>
                 </TableCell>

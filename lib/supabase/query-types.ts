@@ -38,6 +38,7 @@ export type EnrollmentWithProfile = {
     full_name: string;
     first_name: string | null;
     last_name: string | null;
+    nickname: string | null;
     student_number: string | null;
     group_name: string | null;
   } | null;

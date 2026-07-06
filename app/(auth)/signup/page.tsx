@@ -41,6 +41,10 @@ export default function SignupPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
+              <Label htmlFor="nickname">Nickname (optional)</Label>
+              <Input id="nickname" name="nickname" placeholder="e.g. Ben" />
+            </div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="studentNumber">Student ID</Label>
               <Input id="studentNumber" name="studentNumber" required />
             </div>

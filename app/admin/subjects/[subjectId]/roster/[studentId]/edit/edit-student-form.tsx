@@ -13,6 +13,7 @@ export function EditStudentForm({
   studentId,
   firstName,
   lastName,
+  nickname,
   studentNumber,
   groupName,
 }: {
@@ -20,6 +21,7 @@ export function EditStudentForm({
   studentId: string;
   firstName: string | null;
   lastName: string | null;
+  nickname: string | null;
   studentNumber: string | null;
   groupName: string | null;
 }) {
@@ -36,6 +38,10 @@ export function EditStudentForm({
       <div className="flex flex-col gap-2">
         <Label htmlFor="lastName">Last name</Label>
         <Input id="lastName" name="lastName" defaultValue={lastName ?? ""} required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="nickname">Nickname (optional)</Label>
+        <Input id="nickname" name="nickname" defaultValue={nickname ?? ""} />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="studentNumber">Student ID</Label>

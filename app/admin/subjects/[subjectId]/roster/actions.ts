@@ -13,6 +13,7 @@ const updateStudentSchema = z.object({
   studentId: z.string().uuid(),
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
+  nickname: z.string().trim(),
   studentNumber: z.string().trim().min(1, "Student ID is required"),
   groupName: z.string().trim(),
 });
@@ -28,6 +29,7 @@ export async function updateStudentAction(
     studentId: formData.get("studentId"),
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
+    nickname: formData.get("nickname"),
     studentNumber: formData.get("studentNumber"),
     groupName: formData.get("groupName"),
   });
@@ -41,6 +43,7 @@ export async function updateStudentAction(
       full_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
       first_name: parsed.data.firstName,
       last_name: parsed.data.lastName,
+      nickname: parsed.data.nickname || null,
       student_number: parsed.data.studentNumber,
       group_name: parsed.data.groupName || null,
     })

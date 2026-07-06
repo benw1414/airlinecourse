@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
 import type { Profile } from "@/lib/auth";
+import { formatStudentName } from "@/lib/format-name";
 
 export function SiteHeader({ profile }: { profile: Profile }) {
   const links =
@@ -32,7 +33,9 @@ export function SiteHeader({ profile }: { profile: Profile }) {
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-muted-foreground">{profile.full_name}</span>
+          <span className="text-muted-foreground">
+            {formatStudentName(profile.full_name, profile.nickname)}
+          </span>
           <form action={signOut}>
             <Button variant="outline" size="sm" type="submit">
               Log out

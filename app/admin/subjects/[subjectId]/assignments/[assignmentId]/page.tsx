@@ -20,6 +20,7 @@ import {
 import { GradeAllButton, ImportBatchButton } from "./grading-controls";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 import { DownloadFileLink } from "@/components/download-file-link";
+import { formatStudentName } from "@/lib/format-name";
 
 // Grading a batch downloads + extracts every submission's files synchronously
 // before handing off to the Anthropic Batches API. 60s is the max duration
@@ -39,7 +40,7 @@ type SubmissionRow = {
   id: string;
   status: string;
   submitted_at: string | null;
-  profiles: { full_name: string; group_name: string | null } | null;
+  profiles: { full_name: string; nickname: string | null; group_name: string | null } | null;
   submission_files: {
     id: string;
     original_filename: string;
@@ -73,7 +74,7 @@ export default async function AssignmentDetailPage({
   const { data: submissions } = await supabase
     .from("submissions")
     .select<string, SubmissionRow>(
-      "id, status, submitted_at, profiles(full_name, group_name), submission_files(id, original_filename, scan_status)"
+      "id, status, submitted_at, profiles(full_name, nickname, group_name), submission_files(id, original_filename, scan_status)"
     )
     .eq("assignment_id", assignmentId)
     .order("submitted_at");
@@ -196,7 +197,9 @@ export default async function AssignmentDetailPage({
               {submissions?.length ? (
                 submissions.map((submission) => (
                   <TableRow key={submission.id}>
-                    <TableCell>{submission.profiles?.full_name}</TableCell>
+                    <TableCell>
+                      {formatStudentName(submission.profiles?.full_name, submission.profiles?.nickname)}
+                    </TableCell>
                     {assignment.submission_mode === "group" && (
                       <TableCell className="text-muted-foreground">
                         {submission.profiles?.group_name ?? "—"}

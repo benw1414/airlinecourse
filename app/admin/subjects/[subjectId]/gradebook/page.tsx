@@ -62,6 +62,7 @@ export default async function GradebookPage({
               <TableRow>
                 <TableHead>Student ID</TableHead>
                 <TableHead>Student</TableHead>
+                <TableHead>Nickname</TableHead>
                 {assignments.map((a) => (
                   <TableHead key={a.id} className="whitespace-nowrap">
                     Week {a.weekNumber}
@@ -82,6 +83,9 @@ export default async function GradebookPage({
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {row.studentName}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {row.nickname ?? "—"}
                     </TableCell>
                     {assignments.map((a) => (
                       <TableCell key={a.id}>
@@ -105,7 +109,7 @@ export default async function GradebookPage({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={assignments.length + 3}
+                    colSpan={assignments.length + 4}
                     className="text-muted-foreground"
                   >
                     No enrolled students yet.

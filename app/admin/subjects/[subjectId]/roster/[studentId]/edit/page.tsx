@@ -18,7 +18,7 @@ export default async function EditStudentPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, first_name, last_name, student_number, group_name")
+    .select("id, first_name, last_name, nickname, student_number, group_name")
     .eq("id", studentId)
     .single();
 
@@ -36,6 +36,7 @@ export default async function EditStudentPage({
             studentId={profile.id}
             firstName={profile.first_name}
             lastName={profile.last_name}
+            nickname={profile.nickname}
             studentNumber={profile.student_number}
             groupName={profile.group_name}
           />

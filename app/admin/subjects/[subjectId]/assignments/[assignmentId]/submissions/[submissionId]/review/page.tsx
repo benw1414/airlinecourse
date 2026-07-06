@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { DownloadFileLink } from "@/components/download-file-link";
 import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-status";
 import { ReviewForm } from "./review-form";
+import { formatStudentName } from "@/lib/format-name";
 
 export default async function ReviewPage({
   params,
@@ -26,17 +27,22 @@ export default async function ReviewPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("id, status, profiles(full_name), submission_files(id, original_filename, scan_status)")
+    .select("id, status, profiles(full_name, nickname), submission_files(id, original_filename, scan_status)")
     .eq("id", submissionId)
     .eq("assignment_id", assignmentId)
     .single<{
       id: string;
       status: string;
-      profiles: { full_name: string } | null;
+      profiles: { full_name: string; nickname: string | null } | null;
       submission_files: { id: string; original_filename: string; scan_status: string }[];
     }>();
 
   if (!submission) notFound();
+
+  const studentDisplayName = formatStudentName(
+    submission.profiles?.full_name,
+    submission.profiles?.nickname
+  );
 
   const filesCard = submission.submission_files.length > 0 && (
     <Card>
@@ -84,7 +90,7 @@ export default async function ReviewPage({
       <div className="mx-auto flex max-w-2xl flex-col gap-6">
         <div>
           <h1 className="text-2xl font-semibold">
-            Review &middot; {submission.profiles?.full_name}
+            Review &middot; {studentDisplayName}
           </h1>
           <Badge variant="default">
             Published {new Date(publishedGrade.published_at).toLocaleString()}
@@ -165,7 +171,7 @@ export default async function ReviewPage({
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">
-          Review &middot; {submission.profiles?.full_name}
+          Review &middot; {studentDisplayName}
         </h1>
         {hasCompletedAiResult && aiResult.needs_attention && (
           <Badge variant="destructive">

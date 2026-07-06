@@ -11,6 +11,7 @@ export type GradebookRow = {
   studentId: string;
   studentName: string;
   studentNumber: string | null;
+  nickname: string | null;
   scores: Record<string, number | null>;
   totalScore: number;
   totalPossible: number;
@@ -40,12 +41,12 @@ export async function computeSubjectGradebook(
 
   type EnrollmentRow = {
     student_id: string;
-    profiles: { full_name: string; student_number: string | null } | null;
+    profiles: { full_name: string; student_number: string | null; nickname: string | null } | null;
   };
 
   const { data: enrollments } = await supabase
     .from("enrollments")
-    .select<string, EnrollmentRow>("student_id, profiles(full_name, student_number)")
+    .select<string, EnrollmentRow>("student_id, profiles(full_name, student_number, nickname)")
     .eq("subject_id", subjectId);
 
   const students = (enrollments ?? [])
@@ -53,6 +54,7 @@ export async function computeSubjectGradebook(
       studentId: e.student_id,
       studentName: e.profiles?.full_name ?? "",
       studentNumber: e.profiles?.student_number ?? null,
+      nickname: e.profiles?.nickname ?? null,
     }))
     .sort((a, b) => a.studentName.localeCompare(b.studentName));
 
@@ -84,7 +86,7 @@ export async function computeSubjectGradebook(
     }
   }
 
-  const rows: GradebookRow[] = students.map(({ studentId, studentName, studentNumber }) => {
+  const rows: GradebookRow[] = students.map(({ studentId, studentName, studentNumber, nickname }) => {
     const scores: Record<string, number | null> = {};
     let totalScore = 0;
     let totalPossible = 0;
@@ -98,7 +100,7 @@ export async function computeSubjectGradebook(
       }
     }
 
-    return { studentId, studentName, studentNumber, scores, totalScore, totalPossible };
+    return { studentId, studentName, studentNumber, nickname, scores, totalScore, totalPossible };
   });
 
   return { assignments, rows };
@@ -108,6 +110,7 @@ export function gradebookToCsv(gradebook: SubjectGradebook): string {
   const header = [
     "Student ID",
     "Student",
+    "Nickname",
     ...gradebook.assignments.map((a) => `Week ${a.weekNumber} - ${a.title} (${a.maxPoints})`),
     "Total",
     "Percentage",
@@ -123,6 +126,7 @@ export function gradebookToCsv(gradebook: SubjectGradebook): string {
     const cells = [
       row.studentNumber ?? "",
       row.studentName,
+      row.nickname ?? "",
       ...gradebook.assignments.map((a) => (row.scores[a.id] === null ? "" : String(row.scores[a.id]))),
       String(row.totalScore),
       percentage,

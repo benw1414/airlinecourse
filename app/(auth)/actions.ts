@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 const signUpSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
+  nickname: z.string().trim().optional(),
   studentNumber: z.string().trim().min(1, "Student ID is required"),
   groupName: z.string().trim().min(1, "Group name is required"),
   email: z.string().trim().email("Enter a valid email"),
@@ -27,6 +28,7 @@ export async function signUp(
   const parsed = signUpSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
+    nickname: formData.get("nickname"),
     studentNumber: formData.get("studentNumber"),
     groupName: formData.get("groupName"),
     email: formData.get("email"),
@@ -46,6 +48,7 @@ export async function signUp(
         full_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
         first_name: parsed.data.firstName,
         last_name: parsed.data.lastName,
+        nickname: parsed.data.nickname || null,
         student_number: parsed.data.studentNumber,
         group_name: parsed.data.groupName,
       },
