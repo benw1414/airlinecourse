@@ -15,6 +15,7 @@ export function SiteHeader({ profile }: { profile: Profile }) {
           { href: "/dashboard", label: "My Subjects" },
           { href: "/subjects", label: "Browse Subjects" },
           { href: "/grades", label: "My Grades" },
+          { href: "/profile", label: "My Profile" },
         ];
 
   return (
