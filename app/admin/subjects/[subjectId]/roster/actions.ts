@@ -35,7 +35,7 @@ export async function updateStudentAction(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .update({
       full_name: `${parsed.data.firstName} ${parsed.data.lastName}`,
@@ -44,9 +44,16 @@ export async function updateStudentAction(
       student_number: parsed.data.studentNumber,
       group_name: parsed.data.groupName || null,
     })
-    .eq("id", parsed.data.studentId);
+    .eq("id", parsed.data.studentId)
+    .select("id");
 
   if (error) return { error: error.message };
+  // RLS blocking an update returns no error, just zero affected rows — the
+  // "lecturers can update any profile" policy (migration 0006) must be
+  // applied for this to succeed.
+  if (!data?.length) {
+    return { error: "Save failed — the database permissions for this feature haven't been applied yet." };
+  }
 
   revalidatePath(`/admin/subjects/${parsed.data.subjectId}/roster`);
   redirect(`/admin/subjects/${parsed.data.subjectId}/roster`);
@@ -71,13 +78,18 @@ export async function unenrollStudentAction(
   if (!parsed.success) return { error: "Invalid request" };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("enrollments")
     .delete()
     .eq("subject_id", parsed.data.subjectId)
-    .eq("student_id", parsed.data.studentId);
+    .eq("student_id", parsed.data.studentId)
+    .select("id");
 
   if (error) return { error: error.message };
+  // Same silent-no-op risk as the update above — see comment there.
+  if (!data?.length) {
+    return { error: "Remove failed — the database permissions for this feature haven't been applied yet." };
+  }
 
   revalidatePath(`/admin/subjects/${parsed.data.subjectId}/roster`);
   return { error: null };
