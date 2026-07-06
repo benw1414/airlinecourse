@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { EnrollmentWithProfile } from "@/lib/supabase/query-types";
@@ -9,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UnenrollButton } from "./unenroll-button";
 
 export default async function RosterPage({
   params,
@@ -29,7 +31,7 @@ export default async function RosterPage({
   const { data: enrollments } = await supabase
     .from("enrollments")
     .select<string, EnrollmentWithProfile>(
-      "id, enrolled_at, profiles(full_name, student_number, group_name)"
+      "id, student_id, enrolled_at, profiles(full_name, first_name, last_name, student_number, group_name)"
     )
     .eq("subject_id", subjectId)
     .order("enrolled_at");
@@ -50,6 +52,7 @@ export default async function RosterPage({
             <TableHead>Student ID</TableHead>
             <TableHead>Group</TableHead>
             <TableHead>Enrolled on</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,11 +65,26 @@ export default async function RosterPage({
                 <TableCell>
                   {new Date(enrollment.enrolled_at).toLocaleDateString()}
                 </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/admin/subjects/${subjectId}/roster/${enrollment.student_id}/edit`}
+                      className="text-sm underline underline-offset-4"
+                    >
+                      Edit
+                    </Link>
+                    <UnenrollButton
+                      subjectId={subjectId}
+                      studentId={enrollment.student_id}
+                      studentName={enrollment.profiles?.full_name ?? "this student"}
+                    />
+                  </div>
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="text-muted-foreground">
+              <TableCell colSpan={5} className="text-muted-foreground">
                 No students enrolled yet.
               </TableCell>
             </TableRow>
