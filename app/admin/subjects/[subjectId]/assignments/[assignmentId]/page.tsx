@@ -86,6 +86,24 @@ export default async function AssignmentDetailPage({
     .eq("assignment_id", assignmentId)
     .order("created_at", { ascending: false });
 
+  let groups: string[] = [];
+  if (assignment.submission_mode === "group") {
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("profiles(group_name)")
+      .eq("subject_id", subjectId)
+      .returns<{ profiles: { group_name: string | null } | null }[]>();
+
+    const seenByKey = new Map<string, string>();
+    for (const e of enrollments ?? []) {
+      const name = e.profiles?.group_name?.trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (!seenByKey.has(key)) seenByKey.set(key, name);
+    }
+    groups = Array.from(seenByKey.values()).sort((a, b) => a.localeCompare(b));
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <BackLink href={`/admin/subjects/${subjectId}/assignments`} label="Assignments" />
@@ -177,6 +195,30 @@ export default async function AssignmentDetailPage({
           ) : null}
         </CardContent>
       </Card>
+
+      {assignment.submission_mode === "group" && groups.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Groups</CardTitle>
+            <CardDescription>
+              Grade a whole group at once &mdash; you can leave out anyone who
+              shouldn&apos;t receive the grade (e.g. missed class).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {groups.map((groupName) => (
+              <Link
+                key={groupName}
+                href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/group-grade?group=${encodeURIComponent(groupName)}`}
+              >
+                <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                  Grade {groupName}
+                </Badge>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

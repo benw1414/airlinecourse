@@ -1,5 +1,9 @@
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
+function normalizeGroupName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
 // Copies a just-submitted student's files + submitted status to every other
 // student sharing their group_name within the same subject. Each groupmate
 // keeps their own submission/file rows (under their own storage path, so
@@ -35,16 +39,25 @@ export async function propagateGroupSubmission({
 
   if (!uploaderSubmission?.submission_files?.length) return;
 
-  const { data: groupmateEnrollments } = await serviceRole
+  // Group names are free-text the student typed at signup — match
+  // case/whitespace-insensitively (in application code, not a DB filter) so
+  // "AB Oversea" and " ab oversea " are treated as the same group instead of
+  // silently failing to propagate to each other.
+  const { data: subjectEnrollments } = await serviceRole
     .from("enrollments")
     .select("student_id, profiles!inner(group_name)")
     .eq("subject_id", subjectId)
-    .eq("profiles.group_name", groupName)
-    .neq("student_id", uploaderId);
+    .neq("student_id", uploaderId)
+    .returns<{ student_id: string; profiles: { group_name: string | null } }[]>();
+
+  const normalizedGroupName = normalizeGroupName(groupName);
+  const groupmateEnrollments = (subjectEnrollments ?? []).filter(
+    (e) => e.profiles.group_name && normalizeGroupName(e.profiles.group_name) === normalizedGroupName
+  );
 
   const submittedAt = new Date().toISOString();
 
-  for (const mate of groupmateEnrollments ?? []) {
+  for (const mate of groupmateEnrollments) {
     const { data: existing } = await serviceRole
       .from("submissions")
       .select("id")
