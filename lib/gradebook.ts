@@ -12,6 +12,7 @@ export type GradebookRow = {
   studentName: string;
   studentNumber: string | null;
   nickname: string | null;
+  groupName: string | null;
   scores: Record<string, number | null>;
   totalScore: number;
   totalPossible: number;
@@ -41,12 +42,17 @@ export async function computeSubjectGradebook(
 
   type EnrollmentRow = {
     student_id: string;
-    profiles: { full_name: string; student_number: string | null; nickname: string | null } | null;
+    profiles: {
+      full_name: string;
+      student_number: string | null;
+      nickname: string | null;
+      group_name: string | null;
+    } | null;
   };
 
   const { data: enrollments } = await supabase
     .from("enrollments")
-    .select<string, EnrollmentRow>("student_id, profiles(full_name, student_number, nickname)")
+    .select<string, EnrollmentRow>("student_id, profiles(full_name, student_number, nickname, group_name)")
     .eq("subject_id", subjectId);
 
   const students = (enrollments ?? [])
@@ -55,6 +61,7 @@ export async function computeSubjectGradebook(
       studentName: e.profiles?.full_name ?? "",
       studentNumber: e.profiles?.student_number ?? null,
       nickname: e.profiles?.nickname ?? null,
+      groupName: e.profiles?.group_name ?? null,
     }))
     .sort((a, b) => a.studentName.localeCompare(b.studentName));
 
@@ -86,22 +93,24 @@ export async function computeSubjectGradebook(
     }
   }
 
-  const rows: GradebookRow[] = students.map(({ studentId, studentName, studentNumber, nickname }) => {
-    const scores: Record<string, number | null> = {};
-    let totalScore = 0;
-    let totalPossible = 0;
+  const rows: GradebookRow[] = students.map(
+    ({ studentId, studentName, studentNumber, nickname, groupName }) => {
+      const scores: Record<string, number | null> = {};
+      let totalScore = 0;
+      let totalPossible = 0;
 
-    for (const assignment of assignments) {
-      const score = scoreByStudentAndAssignment.get(`${studentId}:${assignment.id}`);
-      scores[assignment.id] = score ?? null;
-      if (score !== undefined) {
-        totalScore += score;
-        totalPossible += maxPointsByAssignment.get(assignment.id) ?? 0;
+      for (const assignment of assignments) {
+        const score = scoreByStudentAndAssignment.get(`${studentId}:${assignment.id}`);
+        scores[assignment.id] = score ?? null;
+        if (score !== undefined) {
+          totalScore += score;
+          totalPossible += maxPointsByAssignment.get(assignment.id) ?? 0;
+        }
       }
-    }
 
-    return { studentId, studentName, studentNumber, nickname, scores, totalScore, totalPossible };
-  });
+      return { studentId, studentName, studentNumber, nickname, groupName, scores, totalScore, totalPossible };
+    }
+  );
 
   return { assignments, rows };
 }
@@ -111,6 +120,7 @@ export function gradebookToCsv(gradebook: SubjectGradebook): string {
     "Student ID",
     "Student",
     "Nickname",
+    "Group",
     ...gradebook.assignments.map((a) => `Week ${a.weekNumber} - ${a.title} (${a.maxPoints})`),
     "Total",
     "Percentage",
@@ -127,6 +137,7 @@ export function gradebookToCsv(gradebook: SubjectGradebook): string {
       row.studentNumber ?? "",
       row.studentName,
       row.nickname ?? "",
+      row.groupName ?? "",
       ...gradebook.assignments.map((a) => (row.scores[a.id] === null ? "" : String(row.scores[a.id]))),
       String(row.totalScore),
       percentage,

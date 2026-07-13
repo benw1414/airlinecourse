@@ -22,6 +22,7 @@ import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-stat
 import { DownloadFileLink } from "@/components/download-file-link";
 import { formatStudentName } from "@/lib/format-name";
 import { BackLink } from "@/components/back-link";
+import { SyncGroupButton } from "./sync-group-button";
 
 // Grading a batch downloads + extracts every submission's files synchronously
 // before handing off to the Anthropic Batches API. 60s is the max duration
@@ -202,19 +203,27 @@ export default async function AssignmentDetailPage({
             <CardTitle>Groups</CardTitle>
             <CardDescription>
               Grade a whole group at once &mdash; you can leave out anyone who
-              shouldn&apos;t receive the grade (e.g. missed class).
+              shouldn&apos;t receive the grade (e.g. missed class). If you just
+              fixed a student&apos;s group name to match their teammates, hit
+              &quot;Sync&quot; so their submission catches up.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
+          <CardContent className="flex flex-col gap-3">
             {groups.map((groupName) => (
-              <Link
-                key={groupName}
-                href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/group-grade?group=${encodeURIComponent(groupName)}`}
-              >
-                <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-                  Grade {groupName}
-                </Badge>
-              </Link>
+              <div key={groupName} className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/group-grade?group=${encodeURIComponent(groupName)}`}
+                >
+                  <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+                    Grade {groupName}
+                  </Badge>
+                </Link>
+                <SyncGroupButton
+                  subjectId={subjectId}
+                  assignmentId={assignmentId}
+                  groupName={groupName}
+                />
+              </div>
             ))}
           </CardContent>
         </Card>
