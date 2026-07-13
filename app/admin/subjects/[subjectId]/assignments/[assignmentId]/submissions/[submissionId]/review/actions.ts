@@ -105,3 +105,56 @@ export async function publishGrade(
     `/admin/subjects/${parsed.data.subjectId}/assignments/${parsed.data.assignmentId}`
   );
 }
+
+const unpublishSchema = z.object({
+  subjectId: z.string().uuid(),
+  assignmentId: z.string().uuid(),
+  submissionId: z.string().uuid(),
+});
+
+// Removes a single student's published grade — e.g. they were included in a
+// group publish by mistake, or missed class and shouldn't have received it.
+// Only that student's grade is affected; the rest of the group is untouched.
+export async function unpublishGrade(
+  _prevState: PublishActionState,
+  formData: FormData
+): Promise<PublishActionState> {
+  await requireLecturer();
+
+  const parsed = unpublishSchema.safeParse({
+    subjectId: formData.get("subjectId"),
+    assignmentId: formData.get("assignmentId"),
+    submissionId: formData.get("submissionId"),
+  });
+
+  if (!parsed.success) return { error: "Invalid request" };
+
+  const supabase = await createClient();
+
+  const { error: deleteError } = await supabase
+    .from("published_grades")
+    .delete()
+    .eq("submission_id", parsed.data.submissionId);
+
+  if (deleteError) return { error: deleteError.message };
+
+  const { data: files } = await supabase
+    .from("submission_files")
+    .select("id")
+    .eq("submission_id", parsed.data.submissionId)
+    .limit(1);
+
+  const { error: statusError } = await supabase
+    .from("submissions")
+    .update({ status: files?.length ? "submitted" : "draft" })
+    .eq("id", parsed.data.submissionId);
+
+  if (statusError) return { error: statusError.message };
+
+  revalidatePath(
+    `/admin/subjects/${parsed.data.subjectId}/assignments/${parsed.data.assignmentId}`
+  );
+  redirect(
+    `/admin/subjects/${parsed.data.subjectId}/assignments/${parsed.data.assignmentId}/submissions/${parsed.data.submissionId}/review`
+  );
+}

@@ -13,6 +13,7 @@ import { scanStatusBadgeVariant, scanStatusLabel } from "@/lib/uploads/scan-stat
 import { ReviewForm } from "./review-form";
 import { formatStudentName } from "@/lib/format-name";
 import { BackLink } from "@/components/back-link";
+import { UnpublishButton } from "./unpublish-button";
 
 export default async function ReviewPage({
   params,
@@ -134,6 +135,14 @@ export default async function ReviewPage({
             })}
           </CardContent>
         </Card>
+        <div className="flex justify-end">
+          <UnpublishButton
+            subjectId={subjectId}
+            assignmentId={assignmentId}
+            submissionId={submissionId}
+            studentName={studentDisplayName}
+          />
+        </div>
       </div>
     );
   }
