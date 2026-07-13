@@ -28,13 +28,15 @@ export default async function ReviewPage({
 
   const { data: submission } = await supabase
     .from("submissions")
-    .select("id, status, profiles(full_name, nickname), submission_files(id, original_filename, scan_status)")
+    .select(
+      "id, status, profiles(full_name, nickname, group_name), submission_files(id, original_filename, scan_status)"
+    )
     .eq("id", submissionId)
     .eq("assignment_id", assignmentId)
     .single<{
       id: string;
       status: string;
-      profiles: { full_name: string; nickname: string | null } | null;
+      profiles: { full_name: string; nickname: string | null; group_name: string | null } | null;
       submission_files: { id: string; original_filename: string; scan_status: string }[];
     }>();
 
@@ -44,6 +46,7 @@ export default async function ReviewPage({
     submission.profiles?.full_name,
     submission.profiles?.nickname
   );
+  const groupName = submission.profiles?.group_name ?? null;
 
   const filesCard = submission.submission_files.length > 0 && (
     <Card>
@@ -97,9 +100,12 @@ export default async function ReviewPage({
           <h1 className="text-2xl font-semibold">
             Review &middot; {studentDisplayName}
           </h1>
-          <Badge variant="default">
-            Published {new Date(publishedGrade.published_at).toLocaleString()}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            {groupName && <Badge variant="outline">Group: {groupName}</Badge>}
+            <Badge variant="default">
+              Published {new Date(publishedGrade.published_at).toLocaleString()}
+            </Badge>
+          </div>
         </div>
         {filesCard}
         <Card>
@@ -182,11 +188,14 @@ export default async function ReviewPage({
         <h1 className="text-2xl font-semibold">
           Review &middot; {studentDisplayName}
         </h1>
-        {hasCompletedAiResult && aiResult.needs_attention && (
-          <Badge variant="destructive">
-            AI returned a score above a criterion&apos;s max &mdash; check before publishing
-          </Badge>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {groupName && <Badge variant="outline">Group: {groupName}</Badge>}
+          {hasCompletedAiResult && aiResult.needs_attention && (
+            <Badge variant="destructive">
+              AI returned a score above a criterion&apos;s max &mdash; check before publishing
+            </Badge>
+          )}
+        </div>
       </div>
       {filesCard}
       <Card>

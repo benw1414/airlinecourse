@@ -23,6 +23,7 @@ import { DownloadFileLink } from "@/components/download-file-link";
 import { formatStudentName } from "@/lib/format-name";
 import { BackLink } from "@/components/back-link";
 import { SyncGroupButton } from "./sync-group-button";
+import { ensureSubmissionForGradingAction } from "./ensure-submission-actions";
 
 // Grading a batch downloads + extracts every submission's files synchronously
 // before handing off to the Anthropic Batches API. 60s is the max duration
@@ -42,12 +43,26 @@ type SubmissionRow = {
   id: string;
   status: string;
   submitted_at: string | null;
-  profiles: { full_name: string; nickname: string | null; group_name: string | null } | null;
+  student_id: string;
   submission_files: {
     id: string;
     original_filename: string;
     scan_status: string;
   }[];
+};
+
+type EnrollmentRow = {
+  student_id: string;
+  profiles: { full_name: string; nickname: string | null; group_name: string | null } | null;
+};
+
+type RosterRow = {
+  studentId: string;
+  displayName: string;
+  groupName: string | null;
+  submissionId: string | null;
+  status: string;
+  files: { id: string; original_filename: string; scan_status: string }[];
 };
 
 export default async function AssignmentDetailPage({
@@ -73,13 +88,37 @@ export default async function AssignmentDetailPage({
     .eq("assignment_id", assignmentId)
     .order("position");
 
+  const { data: enrollments } = await supabase
+    .from("enrollments")
+    .select<string, EnrollmentRow>("student_id, profiles(full_name, nickname, group_name)")
+    .eq("subject_id", subjectId);
+
   const { data: submissions } = await supabase
     .from("submissions")
     .select<string, SubmissionRow>(
-      "id, status, submitted_at, profiles(full_name, nickname, group_name), submission_files(id, original_filename, scan_status)"
+      "id, status, submitted_at, student_id, submission_files(id, original_filename, scan_status)"
     )
-    .eq("assignment_id", assignmentId)
-    .order("submitted_at");
+    .eq("assignment_id", assignmentId);
+
+  const submissionByStudent = new Map((submissions ?? []).map((s) => [s.student_id, s]));
+
+  // Every enrolled student gets a row — not just the ones with an existing
+  // submission — otherwise a student who never opened the assignment (but
+  // was present and took part, e.g. relying on a groupmate to upload) has no
+  // row at all and no way to be graded.
+  const rosterRows: RosterRow[] = (enrollments ?? [])
+    .map((e) => {
+      const submission = submissionByStudent.get(e.student_id);
+      return {
+        studentId: e.student_id,
+        displayName: formatStudentName(e.profiles?.full_name, e.profiles?.nickname) || "Unknown",
+        groupName: e.profiles?.group_name ?? null,
+        submissionId: submission?.id ?? null,
+        status: submission?.status ?? "none",
+        files: submission?.submission_files ?? [],
+      };
+    })
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
   const { data: gradingBatches } = await supabase
     .from("grading_batches")
@@ -89,12 +128,6 @@ export default async function AssignmentDetailPage({
 
   let groups: string[] = [];
   if (assignment.submission_mode === "group") {
-    const { data: enrollments } = await supabase
-      .from("enrollments")
-      .select("profiles(group_name)")
-      .eq("subject_id", subjectId)
-      .returns<{ profiles: { group_name: string | null } | null }[]>();
-
     const seenByKey = new Map<string, string>();
     for (const e of enrollments ?? []) {
       const name = e.profiles?.group_name?.trim();
@@ -247,23 +280,23 @@ export default async function AssignmentDetailPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {submissions?.length ? (
-                submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell>
-                      {formatStudentName(submission.profiles?.full_name, submission.profiles?.nickname)}
-                    </TableCell>
+              {rosterRows.length ? (
+                rosterRows.map((row) => (
+                  <TableRow key={row.studentId}>
+                    <TableCell>{row.displayName}</TableCell>
                     {assignment.submission_mode === "group" && (
                       <TableCell className="text-muted-foreground">
-                        {submission.profiles?.group_name ?? "—"}
+                        {row.groupName ?? "—"}
                       </TableCell>
                     )}
                     <TableCell>
-                      <Badge variant="secondary">{submission.status}</Badge>
+                      <Badge variant={row.status === "none" ? "outline" : "secondary"}>
+                        {row.status === "none" ? "not started" : row.status}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        {submission.submission_files.map((file) => (
+                        {row.files.map((file) => (
                           <div
                             key={file.id}
                             className="flex items-center gap-2 text-sm"
@@ -280,13 +313,27 @@ export default async function AssignmentDetailPage({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {submission.status !== "draft" && (
+                      {row.submissionId ? (
                         <Link
-                          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/submissions/${submission.id}/review`}
+                          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/submissions/${row.submissionId}/review`}
                           className="text-sm underline underline-offset-4"
                         >
-                          {submission.status === "submitted" ? "Grade" : "Review"}
+                          {row.status === "published" || row.status === "graded_pending_review"
+                            ? "Review"
+                            : "Grade"}
                         </Link>
+                      ) : (
+                        <form action={ensureSubmissionForGradingAction}>
+                          <input type="hidden" name="subjectId" value={subjectId} />
+                          <input type="hidden" name="assignmentId" value={assignmentId} />
+                          <input type="hidden" name="studentId" value={row.studentId} />
+                          <button
+                            type="submit"
+                            className="text-sm underline underline-offset-4"
+                          >
+                            Grade
+                          </button>
+                        </form>
                       )}
                     </TableCell>
                   </TableRow>
@@ -297,7 +344,7 @@ export default async function AssignmentDetailPage({
                     colSpan={assignment.submission_mode === "group" ? 5 : 4}
                     className="text-muted-foreground"
                   >
-                    No submissions yet.
+                    No students enrolled yet.
                   </TableCell>
                 </TableRow>
               )}
