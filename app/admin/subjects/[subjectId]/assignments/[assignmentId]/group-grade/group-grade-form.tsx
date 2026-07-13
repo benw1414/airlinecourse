@@ -38,16 +38,18 @@ export function GroupGradeForm({
   assignmentId,
   groupName,
   criteria: initialCriteria,
+  overallFeedback: initialOverallFeedback,
   members,
 }: {
   subjectId: string;
   assignmentId: string;
   groupName: string;
   criteria: CriterionRow[];
+  overallFeedback: string;
   members: Member[];
 }) {
   const [state, formAction, pending] = useActionState(publishGroupGradeAction, initialState);
-  const [overallFeedback, setOverallFeedback] = useState("");
+  const [overallFeedback, setOverallFeedback] = useState(initialOverallFeedback);
   const [criteria, setCriteria] = useState(initialCriteria);
   const [checked, setChecked] = useState<Record<string, boolean>>(
     Object.fromEntries(members.map((m) => [m.studentId, m.defaultChecked]))

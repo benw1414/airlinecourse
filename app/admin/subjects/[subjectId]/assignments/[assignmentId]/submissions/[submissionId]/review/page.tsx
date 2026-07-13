@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -27,6 +28,12 @@ export default async function ReviewPage({
   const { subjectId, assignmentId, submissionId } = await params;
   const supabase = await createClient();
 
+  const { data: assignment } = await supabase
+    .from("assignments")
+    .select("submission_mode")
+    .eq("id", assignmentId)
+    .single();
+
   const { data: submission } = await supabase
     .from("submissions")
     .select(
@@ -48,6 +55,25 @@ export default async function ReviewPage({
     submission.profiles?.nickname
   );
   const groupName = submission.profiles?.group_name ?? null;
+  const isGroupAssignment = assignment?.submission_mode === "group";
+
+  const groupCallout = isGroupAssignment && groupName && (
+    <Card className="border-dashed">
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+        <p className="text-sm text-muted-foreground">
+          Publishing here only grades <strong>{studentDisplayName}</strong>. To
+          give the same grade to the rest of <strong>{groupName}</strong> at
+          once, use Grade group instead.
+        </p>
+        <Link
+          href={`/admin/subjects/${subjectId}/assignments/${assignmentId}/group-grade?group=${encodeURIComponent(groupName)}`}
+          className="shrink-0 text-sm underline underline-offset-4"
+        >
+          Grade {groupName} &rarr;
+        </Link>
+      </CardContent>
+    </Card>
+  );
 
   const filesCard = submission.submission_files.length > 0 && (
     <Card>
@@ -108,6 +134,7 @@ export default async function ReviewPage({
             </Badge>
           </div>
         </div>
+        {groupCallout}
         {filesCard}
         <Card>
           <CardHeader>
@@ -206,6 +233,7 @@ export default async function ReviewPage({
           )}
         </div>
       </div>
+      {groupCallout}
       {filesCard}
       <Card>
         <CardHeader>

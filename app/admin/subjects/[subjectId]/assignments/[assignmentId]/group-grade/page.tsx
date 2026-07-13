@@ -86,13 +86,35 @@ export default async function GroupGradePage({
     };
   });
 
-  const criteriaRows = criteria.map((c) => ({
-    rubricCriterionId: c.id,
-    name: c.name,
-    maxPoints: c.max_points,
-    score: "0",
-    feedback: "",
-  }));
+  // If any current member already has a published grade (e.g. the lecturer
+  // graded them individually before finding this bulk tool), start from that
+  // grade instead of blank zeros — turns "redo everyone else" into "just
+  // check the rest of the group and publish".
+  const { data: existingGrades } = await supabase
+    .from("published_grades")
+    .select("id, overall_feedback, published_at, published_criterion_scores(rubric_criterion_id, score, feedback)")
+    .in(
+      "submission_id",
+      (submissions ?? []).map((s) => s.id)
+    )
+    .order("published_at", { ascending: false })
+    .limit(1);
+
+  const sourceGrade = existingGrades?.[0];
+  const sourceScoresByCriterion = new Map(
+    sourceGrade?.published_criterion_scores?.map((s) => [s.rubric_criterion_id, s]) ?? []
+  );
+
+  const criteriaRows = criteria.map((c) => {
+    const s = sourceScoresByCriterion.get(c.id);
+    return {
+      rubricCriterionId: c.id,
+      name: c.name,
+      maxPoints: c.max_points,
+      score: s ? String(s.score) : "0",
+      feedback: s?.feedback ?? "",
+    };
+  });
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -117,6 +139,12 @@ export default async function GroupGradePage({
             student checked in the list. Uncheck anyone who shouldn&apos;t receive this
             grade (for example, someone who missed class and didn&apos;t take part).
             Students with no submitted files start unchecked automatically.
+            {sourceGrade && (
+              <>
+                {" "}Pre-filled from a grade already published to someone in this
+                group — adjust if needed before publishing to the rest.
+              </>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -125,6 +153,7 @@ export default async function GroupGradePage({
             assignmentId={assignmentId}
             groupName={group}
             criteria={criteriaRows}
+            overallFeedback={sourceGrade?.overall_feedback ?? ""}
             members={members}
           />
         </CardContent>
