@@ -172,7 +172,12 @@ export default async function StudentAssignmentPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Your submission</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Your submission
+            {assignment.submission_mode === "group" && profile.group_name && (
+              <Badge variant="outline">Group: {profile.group_name}</Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {error || !submission ? (
